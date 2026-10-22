@@ -7,7 +7,7 @@
     "frontend",
     "backend",
     "shared"
-  ]
+  ],
   "scripts": {
     "dev:frontend": "npm run build --workspace=@velora/shared && npm run dev --workspace=@velora/frontend",
     "dev:backend": "npm run build --workspace=@velora/shared && npm run dev --workspace=@velora/backend",
