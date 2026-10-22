@@ -1,6 +1,6 @@
 import express from 'express';
 import { config } from './config.js';
-import { getDBStatus } from './db.js';
+import { getDBStatus, connectDB } from './db.js';
 import productRouter from './routes/productRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import orderRouter from './routes/orderRoutes.js';
@@ -43,6 +43,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
+// Health route DB ke bina bhi chalega (isliye DB middleware se pehle)
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
@@ -53,6 +54,16 @@ app.get('/api/health', (_req, res) => {
     environment: config.nodeEnv,
     database: getDBStatus(),
   });
+});
+
+// Har API request se pehle DB connect karo (cached, serverless-safe)
+app.use(async (_req, res, next) => {
+  const connected = await connectDB();
+  if (!connected) {
+    res.status(503).json({ error: 'Database unavailable' });
+    return;
+  }
+  next();
 });
 
 app.use('/api/auth', authRouter);

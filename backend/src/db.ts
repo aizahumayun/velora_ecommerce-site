@@ -29,7 +29,22 @@ mongoose.connection.on('disconnected', () => {
 /**
  * Connect to MongoDB using Mongoose
  */
-export async function connectDB(): Promise<boolean> {
+let connectPromise: Promise<boolean> | null = null;
+
+/**
+ * Connect to MongoDB using Mongoose (cached, serverless-safe)
+ */
+export function connectDB(): Promise<boolean> {
+  // Already connected: nothing to do
+  if (mongoose.connection.readyState === 1) {
+    return Promise.resolve(true);
+  }
+
+  // Connection attempt already in progress: reuse it
+  if (connectPromise) {
+    return connectPromise;
+  }
+
   const uri = config.mongodb.uri;
 
   if (!uri) {
@@ -37,42 +52,42 @@ export async function connectDB(): Promise<boolean> {
       '⚠ MONGODB_URI is not defined in environment variables.\n' +
       '  To enable database persistence, set MONGODB_URI in your environment (e.g., MongoDB Atlas URI).'
     );
-    return false;
+    return Promise.resolve(false);
   }
 
-  try {
-    lastConnectionError = null;
-    await mongoose.connect(uri, {
-      dbName: config.mongodb.dbName,
-      serverSelectionTimeoutMS: 5000,
-    });
-    return true;
-  } catch (error) {
-    const errStr = error instanceof Error ? error.message : String(error);
-    lastConnectionError = errStr;
-    const isIpWhitelistError = 
-      errStr.includes('whitelisted') || 
-      errStr.includes('SSL alert number 80') ||
-      errStr.includes('tlsv1 alert internal error');
+  connectPromise = (async () => {
+    try {
+      lastConnectionError = null;
+      await mongoose.connect(uri, {
+        dbName: config.mongodb.dbName,
+        serverSelectionTimeoutMS: 5000,
+      });
+      return true;
+    } catch (error) {
+      const errStr = error instanceof Error ? error.message : String(error);
+      lastConnectionError = errStr;
+      const isIpWhitelistError =
+        errStr.includes('whitelisted') ||
+        errStr.includes('SSL alert number 80') ||
+        errStr.includes('tlsv1 alert internal error');
 
-    if (isIpWhitelistError) {
-      console.warn(
-        '\n============================================================\n' +
-        '⚠ MongoDB Atlas IP Whitelist Notice:\n' +
-        '  The connection to MongoDB Atlas was rejected during TLS handshake.\n' +
-        '  MongoDB Atlas closes connections with SSL alert 80 when the caller IP\n' +
-        '  is not included in Atlas Network Access IP Access List.\n' +
-        '  To resolve this:\n' +
-        '  1. Go to MongoDB Atlas (cloud.mongodb.com) -> Network Access.\n' +
-        '  2. Click "Add IP Address" -> choose "Allow Access from Anywhere" (0.0.0.0/0)\n' +
-        '     or add the Cloud Run runtime egress IP.\n' +
-        '============================================================\n'
-      );
-    } else {
-      console.error('✗ Failed to connect to MongoDB:', error instanceof Error ? error.name : 'Unknown error');
+      if (isIpWhitelistError) {
+        console.warn(
+          '⚠ MongoDB Atlas IP Whitelist Notice: Atlas Network Access mein 0.0.0.0/0 allow karo (Vercel ke IPs fixed nahi hote).'
+        );
+      } else {
+        console.error('✗ Failed to connect to MongoDB:', error instanceof Error ? error.name : 'Unknown error');
+      }
+      return false;
+    } finally {
+      // Fail hua to agli request dobara try kare
+      if (mongoose.connection.readyState !== 1) {
+        connectPromise = null;
+      }
     }
-    return false;
-  }
+  })();
+
+  return connectPromise;
 }
 
 /**
