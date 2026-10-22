@@ -1,0 +1,21 @@
+{
+  "name": "velora",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run build --workspace=@velora/shared && npm run dev --workspace=@velora/frontend",
+    "dev:backend": "npm run build --workspace=@velora/shared && npm run dev --workspace=@velora/backend",
+    "start:backend": "npm run start --workspace=@velora/backend",
+    "typecheck:frontend": "npm run typecheck --workspace=@velora/frontend",
+    "typecheck:backend": "npm run typecheck --workspace=@velora/backend",
+    "typecheck": "npm run typecheck --workspace=@velora/shared && npm run typecheck:frontend && npm run typecheck:backend",
+    "build:frontend": "npm run build --workspace=@velora/frontend",
+    "build:backend": "npm run build --workspace=@velora/backend",
+    "build": "npm run build:frontend && npm run build:backend"
+  }
+}

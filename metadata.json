@@ -1,0 +1,6 @@
+{
+  "name": "VELORA | Contemporary Women's Clothing",
+  "description": "Modern pieces, thoughtfully designed for everyday life. Rooted in structural discipline, fine tailoring, and quiet sophistication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
