@@ -42,7 +42,7 @@ export const OrderConfirmationPage: React.FC = () => {
           </h1>
 
           <p className="text-xs sm:text-sm text-[#2C3B4D] font-sans max-w-md mx-auto leading-relaxed">
-            Your order has been placed successfully. Your order number is shown below for reference. Email confirmation status is currently unavailable.{' '}
+            Your order has been recorded. Email confirmation status is not available here.{' '}
             {order?.customerEmail && (
             <strong className="text-[#1B2632] font-mono">
               {order.customerEmail}
